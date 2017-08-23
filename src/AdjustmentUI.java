@@ -1,4 +1,5 @@
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -10,10 +11,10 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -27,10 +28,9 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-public class AdjustmentUI extends JDialog {
+public class AdjustmentUI extends JFrame {
 	
 	private Server parent = null;
-	
 	private JTabbedPane tPane = new JTabbedPane();
 	//---입력 탭창---
 	private JPanel panelLog = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -57,7 +57,7 @@ public class AdjustmentUI extends JDialog {
 	private	String memo = null;
 	private	String money = null;
 
-	private void FirstTap() {
+	private void firstTap() {
 		this.add(tPane);
 		//---첫번째 탭 창 구성---
 		//==입력창 panel== 
@@ -86,7 +86,7 @@ public class AdjustmentUI extends JDialog {
 		this.panelLog.add(accountOkButton);
 		this.panelAccount.add(panelLog, BorderLayout.NORTH);
 
-		
+
 		//==입력결과 보여주는 panel==
 		String columnNames[] = {"날짜","수입/지출","내역","수량","메모","금액","총금액"};
 
@@ -155,109 +155,59 @@ public class AdjustmentUI extends JDialog {
 
 	//---조회 탭창---
 	private JPanel panelSelect = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-	private JPanel yearEventPanel = new JPanel();
-	private JPanel monthEventPanel = new JPanel();
 	private JPanel panelInquiry = new JPanel();
-	private JCheckBox yearBox = new JCheckBox("연도별");
-	private JCheckBox monthBox = new JCheckBox("월별");
+	private JPanel panelChart = new JPanel();
+	private JRadioButton yearButton = new JRadioButton("연도별");
+	private JRadioButton monthButton = new JRadioButton("월별");
 	private ButtonGroup bg = new ButtonGroup();
-
-	//===연도별 콤보박스 이벤트 시 나올 차트
-	private DefaultCategoryDataset yeargetDataset() {
-		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		String series = "profit";
-		String type1 = "2015";
-		String type2 = "2016";
-		String type3 = "2017";
-
-		dataset.addValue(4000000, series, type1);
-		dataset.addValue(3000000, series, type2);
-		dataset.addValue(8000000, series, type3);
-
-		return dataset;
-	}
-	private JFreeChart yearChart = ChartFactory.createLineChart(
-			"",
-			"YEAR",
-			"Profit",
-			yeargetDataset(),
-			PlotOrientation.VERTICAL,
-			false,
-			true,
-			false
-			);
-
-	//===월별 콤보박스 이벤트 시 나올 차트
-	private DefaultCategoryDataset monthgetDataset() {
-		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		String series = "profit";
-		String type1 = "jan";
-		String type2 = "Feb";
-		String type3 = "Mar";
-		String type4 = "Apr";
-		String type5 = "May";
-
-		dataset.addValue(150000, series, type1);
-		dataset.addValue(500000, series, type2);
-		dataset.addValue(300000, series, type3);
-		dataset.addValue(600000, series, type4);
-		dataset.addValue(900000, series, type5);
-
-		return dataset;
-	}
-	private JFreeChart monthChart = ChartFactory.createLineChart(
-			"",
-			"Month",
-			"Profit",
-			monthgetDataset(),
-			PlotOrientation.VERTICAL,
-			false,
-			true,
-			false
-			);
-	private void SecondTap() {
-		bg.add(yearBox);
- 		bg.add(monthBox);
- 		this.panelSelect.add(yearBox);
- 		this.panelSelect.add(monthBox);
+	private YearChartPanel ycp = new YearChartPanel();
+	private MonthChartPanel mcp = new MonthChartPanel();
+	private void secondTap() {
+		bg.add(yearButton);
+ 		bg.add(monthButton);
+ 		this.panelSelect.add(yearButton);
+ 		this.panelSelect.add(monthButton);
+ 		this.panelChart.setLayout(new CardLayout());
  		this.panelInquiry.setLayout(new BorderLayout());
  		this.panelInquiry.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));		
  		this.panelInquiry.add(panelSelect,BorderLayout.NORTH);
- 		//===연도별 checkbox이벤트===
- 		this.yearBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				ChartPanel yearCP = new ChartPanel(yearChart);
-				panelInquiry.setBorder(new LineBorder(Color.BLUE));
-				panelInquiry.add(yearCP,BorderLayout.CENTER);
-			}
- 		});
+ 		this.panelInquiry.add(panelChart,BorderLayout.CENTER);
  		
- 		//===월별 checkbox 이벤트===
- 		new Thread(){
- 			public void run() {
- 				monthBox.addActionListener(new ActionListener() {
+ 		//연도별 버튼 클릭시 이벤트
+ 		this.yearButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ChartPanel monthCP = new ChartPanel(monthChart);
-				panelInquiry.setBorder(new LineBorder(Color.RED));
-				panelInquiry.add(monthCP,BorderLayout.CENTER);
+				panelChart.add(ycp,"year");
+				CardLayout cl = (CardLayout) panelChart.getLayout();
+				cl.show(panelChart,"year");
+				
 			}
  		});
- 			}
- 		}.start();
+ 		//월별 버튼 클릭시 이벤트
+ 		this.monthButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				panelChart.add(mcp,"month");
+				CardLayout cl = (CardLayout) panelChart.getLayout();
+				cl.show(panelChart,"month");
+			}
+ 			
+ 		});
  		tPane.addTab("조회", panelInquiry);
  
 	}
+
 	public AdjustmentUI(Server parent) {
 		this.parent = parent;
 		this.setTitle("정산");
 		this.setSize(1000, 600);
 		this.setLocationRelativeTo(parent);
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		this.FirstTap();
-		this.SecondTap();
+		this.firstTap();
+		this.secondTap();
 		this.setVisible(true);
 	}
 
